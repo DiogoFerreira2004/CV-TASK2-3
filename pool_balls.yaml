@@ -1,0 +1,9 @@
+# Pool Ball Detection Dataset
+path: D:\FEUP\AI\Computer vision\CV-TASK2-3\dataset  # absolute path to dataset root
+
+train: images/train
+val:   images/val
+test:  images/test
+
+nc: 5  # number of classes
+names: ['Black', 'Cue', 'Dot', 'Solid', 'Striped']

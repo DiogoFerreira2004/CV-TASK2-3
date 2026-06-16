@@ -1,17 +1,17 @@
 task: detect
 mode: train
 model: yolov8s.pt
-data: D:\FEUP\AI\Computer vision\CV-TASK2-3\pool_balls.yaml
+data: C:\Users\Lenovo\Desktop\Master\VC\CV-TASK2-3\pool_balls.yaml
 epochs: 50
 time: null
 patience: 100
-batch: 8
+batch: 16
 imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: '0'
-workers: 0
+device: cpu
+workers: 8
 project: null
 name: yolov8s_pool
 exist_ok: true
@@ -107,4 +107,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: D:\FEUP\AI\Computer vision\CV-TASK2-3\runs\detect\yolov8s_pool
+save_dir: C:\Users\Lenovo\Desktop\Master\VC\CV-TASK2-3\runs\detect\yolov8s_pool

@@ -1,5 +1,5 @@
 # Pool Ball Detection Dataset
-path: D:\FEUP\AI\Computer vision\CV-TASK2-3\dataset  # absolute path to dataset root
+path: C:\Users\Lenovo\Desktop\Master\VC\CV-TASK2-3\dataset  # absolute path to dataset root
 
 train: images/train
 val:   images/val

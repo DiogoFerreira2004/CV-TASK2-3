@@ -2,7 +2,7 @@ task: detect
 mode: train
 model: yolov8s.pt
 data: D:\FEUP\AI\Computer vision\CV-TASK2-3\pool_balls.yaml
-epochs: 50
+epochs: 20
 time: null
 patience: 100
 batch: 8

@@ -17,9 +17,8 @@ def evaluate_model(model, test_loader, model_name, ft_flag, output_dir, device="
     all_true_counts = []
     all_pred_floats = []
 
-    output_json_data = {}
-    
-    print(f"\n--- Evaluating {model_name.upper()} ---")
+    output_json_data = []
+
     with torch.no_grad():
         for images, targets, paths in test_loader:
             images = images.to(device)
@@ -34,7 +33,10 @@ def evaluate_model(model, test_loader, model_name, ft_flag, output_dir, device="
 
             rounded_preds = np.round(outputs).astype(int)
             for i in range(len(paths)):
-                output_json_data[paths[i]] = int(rounded_preds[i])
+                output_json_data.append({
+                    "image_path": f"images/test/{paths[i]}", 
+                    "num_balls": int(rounded_preds[i])
+                })
 
     y_true = np.array(all_true_counts)
     y_pred = np.array(all_pred_floats)
@@ -67,6 +69,7 @@ def evaluate_model(model, test_loader, model_name, ft_flag, output_dir, device="
         f.write(f"Off-by-One Accuracy:        {off_by_one_accuracy:.2f}%\n")
 
     json_filename = f"{model_name}_ft_predictions.json" if ft_flag else f"{model_name}_base_predictions.json"
+    os.makedirs(output_dir, exist_ok=True)
     json_path = os.path.join(output_dir, json_filename)
     
     with open(json_path, 'w') as json_file:
@@ -144,4 +147,4 @@ if __name__ == "__main__":
 
     model = model.to(device)
 
-    evaluate_model(model, test_loader, args.model, args.ft, device)
+    evaluate_model(model, test_loader, args.model, args.ft,"json_output" , device)

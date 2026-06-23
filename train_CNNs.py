@@ -62,11 +62,11 @@ def train(model, model_name, num_epochs, train_dataloader, validation_dataloader
         print(f"\nEpoch {t+1}/{num_epochs}")
         
         train_loss, train_mae = epoch_iter(train_dataloader, model, loss_fn, optimizer, is_train=True)
-        print(f"Train loss (MSE): {train_loss:.3f} \t Train MAE: {train_mae:.3f} balls")
+        print(f"Train loss (MSE): {train_loss:.3f} \t Train MAE: {train_mae:.3f}")
         
         with torch.no_grad():
             val_loss, val_mae = epoch_iter(validation_dataloader, model, loss_fn, is_train=False)
-            print(f"Val loss (MSE):   {val_loss:.3f} \t Val MAE:   {val_mae:.3f} balls")
+            print(f"Val loss (MSE):   {val_loss:.3f} \t Val MAE:   {val_mae:.3f}")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -105,7 +105,7 @@ def plotTrainingHistory(train_history, val_history, model_name):
     plt.plot(train_history['mae'], label='Train')
     plt.plot(val_history['mae'], label='Validation')
     plt.xlabel('Epoch')
-    plt.ylabel('MAE (Balls)')
+    plt.ylabel('MAE')
     
     plt.tight_layout()
     plt.legend(loc='best')
@@ -173,7 +173,6 @@ if __name__ == "__main__":
     model = model.to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)
-
     criterion = nn.MSELoss()
 
     custom_train_history, custom_val_history = train(model, args.model, EPOCHS, train_loader, valid_loader, criterion, optimizer, PATIENCE)

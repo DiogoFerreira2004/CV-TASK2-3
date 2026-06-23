@@ -53,7 +53,7 @@ Parse the COCO JSON to sum all ball annotations per image (Black + Cue + Dot + S
 | Option | Approach | Loss | Pros | Cons |
 |---|---|---|---|---|
 | A | **Classification** (0–15 classes) | CrossEntropy | Well-understood, confidence scores, maps cleanly to pool ball counts | No ordinal relation between classes |
-| B | **Regression** (predict float, round to int) | MSE / Smooth L1 | Natural for counting, single output neuron | May predict non-integers; no structured output |
+| B ✅ | **Regression** (predict float, round to int) | MSE / Smooth L1 | Natural for counting, single output neuron | May predict non-integers; no structured output |
 | C | **Ordinal regression** (hybrid) | Custom ordinal loss | Best of both worlds | More complex to implement |
 
 **Recommendation:** Start with **Classification** as the primary approach. Also train a **Regression head** for the "extra" comparison — easy to implement, creates a meaningful narrative.
@@ -67,7 +67,7 @@ Parse the COCO JSON to sum all ball annotations per image (Black + Cue + Dot + S
 | A | **Custom CNN (from scratch)** | No | Full control, educational, no ImageNet bias | Needs more data, lower ceiling with 247 images |
 | B ✅ | **ResNet-50** | Yes (ImageNet) | Strong baseline, widely understood, fast convergence | May overfit ImageNet features |
 | C ✅ | **EfficientNet-B0** | Yes (ImageNet) | Best accuracy/compute tradeoff, compact | Slightly more complex architecture |
-| D | **MobileNetV3** | Yes (ImageNet) | Very lightweight | Lower accuracy ceiling |
+| D ✅| **MobileNetV3** | Yes (ImageNet) | Very lightweight | Lower accuracy ceiling |
 | E | **ViT-B/16** | Yes (ImageNet21k) | State-of-the-art, global attention (Lab 11) | Needs more data, heavier compute on Colab |
 
 **Recommendation for the "extra":** Compare **3 architectures**:
@@ -83,12 +83,12 @@ This creates a clear from-scratch vs. transfer-learning narrative and two fine-t
 
 | Decision | Recommended Choice | Alternative |
 |---|---|---|
-| Optimizer | Adam (lr ≈ 1e-4) for fine-tuning | SGD + momentum for scratch |
+| Optimizer ✅ | Adam (lr ≈ 1e-4) for fine-tuning | SGD + momentum for scratch |
 | LR schedule | CosineAnnealingLR | ReduceLROnPlateau |
-| Augmentation | Horizontal flip, color jitter, random crop | + Mixup / CutOut for regularization |
-| Normalization | ImageNet mean/std (pretrained) | Dataset mean/std (scratch) |
-| Batch size | 16–32 | Adjust to Colab VRAM |
-| Epochs | 30–50 (fine-tuning) | 80–100 (from scratch) |
+| Augmentation ✅ | Horizontal flip, color jitter, random crop | + Mixup / CutOut for regularization |
+| Normalization ✅ | ImageNet mean/std (pretrained) | Dataset mean/std (scratch) |
+| Batch size ✅ | 16–32 | Adjust to Colab VRAM |
+| Epochs ✅ | 30–50 (fine-tuning) | 80–100 (from scratch) |
 
 > **Important:** Color augmentation is critical — felt color and lighting vary widely across images.
 
@@ -98,10 +98,10 @@ This creates a clear from-scratch vs. transfer-learning narrative and two fine-t
 
 | Metric | Description | Notes |
 |---|---|---|
-| **MAE** | Mean Absolute Error | Primary counting metric — "off by X balls on average" |
-| **MSE / RMSE** | Mean / Root Mean Squared Error | Penalizes large errors more |
-| **Exact Accuracy** | % images with perfectly correct count | Strict |
-| **Off-by-one Accuracy** | % images where \|pred − gt\| ≤ 1 | More meaningful for counting |
+|✅ **MAE** | Mean Absolute Error | Primary counting metric — "off by X balls on average" |
+|✅ **MSE / RMSE** | Mean / Root Mean Squared Error | Penalizes large errors more |
+|✅ **Exact Accuracy** | % images with perfectly correct count | Strict |
+|✅ **Off-by-one Accuracy** | % images where \|pred − gt\| ≤ 1 | More meaningful for counting |
 | **Confusion Matrix** | Which counts are confused with each other | Classification only |
 
 Build a results table comparing all 3 architectures on these metrics for the report.

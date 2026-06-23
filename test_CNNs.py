@@ -1,4 +1,5 @@
 import os
+import json
 import argparse
 import torch
 import torch.nn as nn
@@ -10,15 +11,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-def evaluate_model(model, test_loader, model_name, ft_flag, device="cuda"):
+def evaluate_model(model, test_loader, model_name, ft_flag, output_dir, device="cuda"):
     model.eval()
     
     all_true_counts = []
     all_pred_floats = []
+
+    output_json_data = {}
     
     print(f"\n--- Evaluating {model_name.upper()} ---")
     with torch.no_grad():
-        for images, targets in test_loader:
+        for images, targets, paths in test_loader:
             images = images.to(device)
 
             outputs = model(images).cpu().numpy().flatten()
@@ -29,27 +32,45 @@ def evaluate_model(model, test_loader, model_name, ft_flag, device="cuda"):
             all_true_counts.extend(targets)
             all_pred_floats.extend(outputs)
 
+            rounded_preds = np.round(outputs).astype(int)
+            for i in range(len(paths)):
+                output_json_data[paths[i]] = int(rounded_preds[i])
+
     y_true = np.array(all_true_counts)
     y_pred = np.array(all_pred_floats)
+
+    y_true_int = y_true.astype(int)
+    y_pred_int = np.round(y_pred).astype(int)
+
+    exact_matches = np.sum(y_true_int == y_pred_int)
+    exact_accuracy = (exact_matches / len(y_true_int)) * 100.0
+
+    absolute_errors = np.abs(y_true_int - y_pred_int)
+    off_by_one_matches = np.sum(absolute_errors <= 1)
+    off_by_one_accuracy = (off_by_one_matches / len(y_true_int)) * 100.0
 
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     r2 = r2_score(y_true, y_pred)
-    
-    print(f"Mean Absolute Error (MAE):  {mae:.4f}")
-    print(f"Root Mean Squared (RMSE):   {rmse:.4f}")
-    print(f"R² Score:                   {r2:.4f}")
 
     report_name = f"{model_name}_ft_metrics.txt" if ft_flag else f"{model_name}_base_metrics.txt"
     os.makedirs("eval", exist_ok=True)
     report_path = os.path.join("eval", report_name)
+
     with open(report_path, "w") as f:
         f.write(f"Model: {model_name.upper()} | Fine-Tuned: {ft_flag}\n")
         f.write("-" * 40 + "\n")
         f.write(f"Mean Absolute Error (MAE):  {mae:.4f}\n")
         f.write(f"Root Mean Squared (RMSE):   {rmse:.4f}\n")
-        f.write(f"R² Score:                   {r2:.4f}\n")
-    print(f"Saved metrics summary to: {report_path}")
+        f.write(f"R^2 Score:                   {r2:.4f}\n")
+        f.write(f"Exact Accuracy:             {exact_accuracy:.2f}%\n")
+        f.write(f"Off-by-One Accuracy:        {off_by_one_accuracy:.2f}%\n")
+
+    json_filename = f"{model_name}_ft_predictions.json" if ft_flag else f"{model_name}_base_predictions.json"
+    json_path = os.path.join(output_dir, json_filename)
+    
+    with open(json_path, 'w') as json_file:
+        json.dump(output_json_data, json_file, indent=4)
 
     plt.figure(figsize=(10, 8))
     
@@ -72,7 +93,6 @@ def evaluate_model(model, test_loader, model_name, ft_flag, device="cuda"):
     plot_path = os.path.join("plots", plot_name)
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"Saved scatter plot to: {plot_path}\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate Pool Ball Regression Models")
@@ -83,10 +103,8 @@ if __name__ == "__main__":
                         help="Include flag to evaluate fine-tuned models.")
     
     args = parser.parse_args()
-    print(f"--- Initializing Regression Eval Pipeline for: {args.model.upper()} ---")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Evaluating on: {device}")
 
     BATCH_SIZE = 32
 
@@ -96,7 +114,7 @@ if __name__ == "__main__":
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    test_dataset = PoolBallCountingDataset("images/test/test_annotations.json", "images/test/", test_transforms)
+    test_dataset = PoolBallCountingDataset("images/test/test_annotations.json", "images/test/", test_transforms, return_path=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
     if args.model == 'convnext':
@@ -115,12 +133,13 @@ if __name__ == "__main__":
         model = models.shufflenet_v2_x2_0(weights=models.ShuffleNet_V2_X2_0_Weights.DEFAULT)
         model.fc = nn.Linear(model.fc.in_features, 1)
 
-    weight_file = f"{args.model}_best_ft_model.pth" if args.ft else f"{args.model}_best_model.pth"
+    model_name = f"{args.model}_best_ft_model.pth" if args.ft else f"{args.model}_best_model.pth"
+    model_path = os.path.join("models", model_name)
+
     try:
-        model.load_state_dict(torch.load(weight_file))
-        print(f"Successfully loaded weights from {weight_file}")
+        model.load_state_dict(torch.load(model_path))
     except FileNotFoundError:
-        print(f"ERROR: Could not find weight file '{weight_file}'. Did you train this model yet?")
+        print(f"ERROR: Could not find weight file '{model_path}'. Did you train this model yet?")
         exit(1)
 
     model = model.to(device)

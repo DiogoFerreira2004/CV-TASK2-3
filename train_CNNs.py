@@ -58,7 +58,6 @@ def train(model, model_name, num_epochs, train_dataloader, validation_dataloader
     best_val_loss = np.inf
     epochs_no_improve = 0
     
-    print(f"Start training on {device}...")
     for t in range(num_epochs):
         print(f"\nEpoch {t+1}/{num_epochs}")
         
@@ -89,7 +88,6 @@ def train(model, model_name, num_epochs, train_dataloader, validation_dataloader
         val_history["loss"].append(val_loss)
         val_history["mae"].append(val_mae)
 
-    print("Finished")
     return train_history, val_history
 
 def plotTrainingHistory(train_history, val_history, model_name):
@@ -116,7 +114,6 @@ def plotTrainingHistory(train_history, val_history, model_name):
     os.makedirs("plots", exist_ok=True)
     plot_path = os.path.join("plots", plot_name)
     plt.savefig(plot_path, dpi=300)
-    print(f"Saved training plot to {model_name}_training_history.png")
 
 
 if __name__ == "__main__":
@@ -126,7 +123,6 @@ if __name__ == "__main__":
                         help="Choose the model architecture to train.")
     
     args = parser.parse_args()
-    print(f"--- Initializing Training Pipeline for: {args.model.upper()} ---")
 
     BATCH_SIZE = 32
     EPOCHS = 50
@@ -182,5 +178,3 @@ if __name__ == "__main__":
 
     custom_train_history, custom_val_history = train(model, args.model, EPOCHS, train_loader, valid_loader, criterion, optimizer, PATIENCE)
     plotTrainingHistory(custom_train_history, custom_val_history, args.model)
-
-    print("Training Complete!")

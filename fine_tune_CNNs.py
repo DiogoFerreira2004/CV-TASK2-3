@@ -1,3 +1,4 @@
+import os
 import argparse
 import torch
 import torch.nn as nn
@@ -14,10 +15,8 @@ if __name__ == "__main__":
                         help="Choose the model architecture to train.")
     
     args = parser.parse_args()
-    print(f"--- Initializing Fine Tuning Pipeline for: {args.model.upper()} ---")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Fine Tuning on: {device}")
 
     BATCH_SIZE = 32
     FINE_TUNE_EPOCHS = 20
@@ -66,7 +65,9 @@ if __name__ == "__main__":
         for param in model.fc.parameters(): param.requires_grad = True
 
     model = model.to(device)
-    model.load_state_dict(torch.load(f"{args.model}_best_model.pth"))
+    model_name = f"{args.model}_best_model.pth"
+    model_path = os.path.join("models", model_name)
+    model.load_state_dict(torch.load(model_path))
 
     for param in model.parameters():
         param.requires_grad = True
@@ -77,5 +78,3 @@ if __name__ == "__main__":
     custom_train_history, custom_val_history = train(model, args.model, FINE_TUNE_EPOCHS, train_loader, valid_loader, criterion, optimizer_ft, PATIENCE, ft_flag=True)
     model_title=args.model.upper()+" [Fine Tuned]"
     plotTrainingHistory(custom_train_history, custom_val_history, model_title)
-
-    print("Tuning Complete!")

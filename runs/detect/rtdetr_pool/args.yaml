@@ -10,7 +10,7 @@ imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: '0'
+device: null
 workers: 0
 project: null
 name: rtdetr_pool

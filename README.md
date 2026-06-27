@@ -6,7 +6,7 @@ This repository contains the complete pipeline for a Computer Vision project foc
 
 ---
 
-## 🛠️ Dependencies
+## Dependencies
 
 Ensure you have Python 3.8+ installed. Install the required packages using the following command:
 
